@@ -105,7 +105,7 @@ if __name__ == '__main__':
     cb_poses = yaml.load(open(output_dir + "/" + cur_step["output_filename"] + "_poses.yaml"))
     free_dict = yaml.load(cur_step["free_params"])
 
-    sample_skip_list = rospy.get_param('calibration_skip_list', [])
+    sample_skip_list = rospy.get_param('calibration_skip_list', [25, 45, 48, 49, 51, 52, 53])
     scatter_list = []
     marker_count = 0
     label_list = list()
@@ -114,6 +114,8 @@ if __name__ == '__main__':
 
         sensor_defs = est_helpers.load_requested_sensors(all_sensors_dict, [cur_loop['cam'], cur_loop['3d']])
         multisensors = get_multisensors(bag_filename, sensor_defs, sample_skip_list)
+        
+        print ("multisensor list size:", len(multisensors))
 
         if (len([ms for ms in multisensors if len(ms.sensors) == 2]) == 0):
             print "********** No Data for [%s] + [%s] pair **********" % (cur_loop['cam'], cur_loop['3d'])
@@ -122,6 +124,7 @@ if __name__ == '__main__':
 
         # Only grab the samples that have both the requested cam and requested 3D sensor
         multisensors_pruned, cb_poses_pruned = zip(*[(ms,cb) for ms,cb in zip(multisensors, cb_poses) if len(ms.sensors) == 2])
+        print ("multisensor_pruned list size:", len(multisensors_pruned))
         sample_ind = [k for k,ms in zip(range(len(multisensors)), multisensors) if len(ms.sensors) == 2]
         sample_ind = [i for i in sample_ind if i not in sample_skip_list]
 
@@ -157,6 +160,12 @@ if __name__ == '__main__':
         cam_sensors   = [[s for s in ms.sensors if s.sensor_id == cur_loop['cam']][0] for ms in multisensors_pruned]
         fk_points = [s.get_measurement() for s in chain_sensors]
         cb_points = [SingleTransform(pose).transform * system_def.checkerboards[ms.checkerboard].generate_points() for pose, ms in zip(cb_poses_pruned,multisensors_pruned)]
+        
+        print len(fk_points)
+        print len(cb_points)
+        
+        #print fk_points
+        #print(cb_points)
 
         points_list_fk    = [ geometry_msgs.msg.Point(cur_pt[0, 0], cur_pt[0, 1], cur_pt[0, 2]) for cur_pt in list(numpy.concatenate(fk_points,1).T)]
         points_list_guess = [ geometry_msgs.msg.Point(cur_pt[0, 0], cur_pt[0, 1], cur_pt[0, 2]) for cur_pt in list(numpy.concatenate(cb_points,1).T)]
@@ -192,14 +201,21 @@ if __name__ == '__main__':
 
         proj_points = [s.compute_expected(pts) for (s,pts) in zip(cam_sensors,fk_points)]
         meas_points = [s.get_measurement() for s in cam_sensors]
+        
+        #print proj_points
 
         r1 = numpy.concatenate(meas_points)
         r2 = numpy.concatenate(proj_points)
         r = numpy.concatenate((r1,r2),axis=0)
+        
+        diff = r2 - r1
 
         import matplotlib.pyplot as plt
         
-        cur_scatter = plt.scatter(array(r)[:,0], array(r)[:,1], **cur_loop['plot_ops'])
+        #cur_scatter = plt.scatter(array(r)[:,0], array(r)[:,1], **cur_loop['plot_ops'])
+        cur_scatter = plt.scatter(array(diff)[:,0], array(diff)[:,1], **cur_loop['plot_ops'])
+        #cur_scatter = plt.scatter(array(r1)[:,0], array(r1)[:,1], **cur_loop['plot_ops'])
+        #cur_scatter = plt.scatter(array(r2)[:,0], array(r2)[:,1], c='r')
         scatter_list.append(cur_scatter)
         
     plt.gca().invert_yaxis()

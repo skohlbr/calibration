@@ -172,6 +172,9 @@ class UrdfParams:
                     this_config["axis"].append( sum( [i[0]*int(i[1]) for i in zip([4,5,6], axis)] ) )
                     # we can handle limited rotations here
                     rot = urdf.joint_map[joint_name].origin.rotation
+                    
+                    print joint_name
+                    print rot
                     if rot != None and (sum([abs(x) for x in rot]) - rot[abs(this_config["axis"][-1])-4]) > 0.001:   
                         print 'Joint origin is rotated, calibration will fail: ', joint_name
                 elif urdf.joint_map[joint_name].joint_type == 'prismatic':

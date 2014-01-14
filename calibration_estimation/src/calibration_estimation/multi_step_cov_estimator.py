@@ -164,7 +164,7 @@ def diff(v1, v2, eps = 1e-10):
 
 # URDF updating -- this should probably go in a different file
 def update_transmission(urdf, joint, gearing):
-    for transmission in urdf.transmissions.values():
+    for transmission in urdf.transmissions:
         if transmission.joint == joint:
             transmission.reduction = transmission.reduction * gearing
             return
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     step_list = load_calibration_steps(config["cal_steps"])
 
     # Count how many checkerboard poses we need to track
-    sample_skip_list = rospy.get_param('calibration_skip_list', [])
+    sample_skip_list = rospy.get_param('calibration_skip_list', [25, 45, 48, 49, 51, 52, 53])
     msg_count = get_robot_measurement_count(bag_filename, sample_skip_list)
 
     if 'initial_poses' in config.keys():
