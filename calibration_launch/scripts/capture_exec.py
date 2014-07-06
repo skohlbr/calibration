@@ -362,7 +362,7 @@ if __name__=='__main__':
                     for cur_sample_path in full_paths:
                         print "On %s sample [%s]" % (sample_options[step]["group"], cur_sample_path)
                         cur_config = yaml.load(open(cur_sample_path))
-                        m_robot = executive.capture(cur_config, rospy.Duration(40))
+                        m_robot = executive.capture(cur_config, rospy.Duration(15))
                         if m_robot is None:
                             print "--------------- Failed To Capture a %s Sample -----------------" % sample_options[step]["group"]
                             if not sample_options[step]["repeat"]:
